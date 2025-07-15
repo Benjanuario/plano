@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gerador de Plano de Aula</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f4f4f4;
+      position: relative;
+    }
+
+    header {
+      background-color: #007BFF;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .menu-toggle {
+      font-size: 30px;
+      cursor: pointer;
+    }
+
+    .account-button {
+      background-color: #ffffff;
+      color: #007BFF;
+      border: 1px solid #007BFF;
+      padding: 8px 15px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .account-button:hover {
+      background-color: #f0f8ff;
+    }
+
+    h1 {
+      font-size: 24px;
+      text-align: center;
+      margin-top: 30px;
+      padding: 0 20px;
+      color: #333;
+    }
+
+    .main-button {
+      display: block;
+      width: 80%;
+      max-width: 400px;
+      margin: 60px auto 0 auto;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background-color: #ccc;
+      border: none;
+      border-radius: 8px;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .button-group {
+      max-width: 400px;
+      margin: 30px auto 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 0 20px;
+    }
+
+    .action-button {
+      background-color: #ffffff;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .action-button:hover {
+      background-color: #f0f0f0;
+    }
+
+    .icon {
+      font-size: 20px;
+    }
+
+    .sidebar {
+      height: 100%;
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: -250px;
+      background-color: white;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 1000;
+      padding-top: 60px;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 10px;
+    }
+
+    .sidebar ul li {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      font-size: 16px;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: transparent;
+      z-index: 999;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .form-modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .form-modal.active {
+      display: flex;
+    }
+
+    .form-container {
+      background-color: white;
+      padding: 25px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .form-container h2 {
+      margin-bottom: 15px;
+    }
+
+    .form-container label {
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    .form-container input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .form-buttons {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+    <div>
+      <button class="account-button" onclick="abrirFormulario()">Minha Conta</button>
+    </div>
+  </header>
+
+  <div id="sidebar" class="sidebar">
+    <ul>
+      <li>1. Gerar Plano de Aula</li>
+      <li>2. Doar</li>
+      <li>3. Tema</li>
+      <li>4. Definições</li>
+      <li>5. Sobre</li>
+      <li>6. Termos e Políticas de Privacidade</li>
+    </ul>
+  </div>
+
+  <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+
+  <h1>GERADOR DE PLANO DE AULA</h1>
+
+  <a href="plano_gerado.html" class="main-button">Gerar Plano de Aula</a>
+
+  <div class="button-group">
+    <button class="action-button"><span class="icon">👤</span>Fazer Doação</button>
+    <button class="action-button"><span class="icon">💬</span>Fale Comigo</button>
+    <button class="action-button">Termos e Políticas de Uso</button>
+  </div>
+
+  <div id="form-modal" class="form-modal">
+    <div class="form-container">
+      <h2>Minha Conta</h2>
+      <label>Nome:</label>
+      <input type="text" placeholder="Digite seu nome" />
+      <label>Email:</label>
+      <input type="email" placeholder="Digite seu email" />
+      <label>Escola onde trabalha:</label>
+      <input type="text" placeholder="Nome da escola" />
+      <label>Número de Telefone:</label>
+      <input type="tel" placeholder="Ex: 84xxxxxxx" />
+      <div class="form-buttons">
+        <button onclick="fecharFormulario()">Cancelar</button>
+        <button onclick="enviarFormulario()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const isOpen = sidebar.classList.contains('open');
+
+      if (isOpen) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+      } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+      }
+    }
+
+    function abrirFormulario() {
+      document.getElementById('form-modal').classList.add('active');
+    }
+
+    function fecharFormulario() {
+      document.getElementById('form-modal').classList.remove('active');
+    }
+
+    function enviarFormulario() {
+      const inputs = document.querySelectorAll('.form-container input');
+      const nome = inputs[0].value.trim();
+      const email = inputs[1].value.trim();
+      const escola = inputs[2].value.trim();
+      const telefone = inputs[3].value.trim();
+
+      if (!nome || !email || !escola || !telefone) {
+        alert("Por favor, preencha todos os campos.");
+        return;
+      }
+
+      const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailValido.test(email)) {
+        alert("Digite um email válido.");
+        return;
+      }
+
+      if (!/^\d{9,}$/.test(telefone)) {
+        alert("Digite um número de telefone válido com pelo menos 9 dígitos.");
+        return;
+      }
+
+      const data = { nome, email, escola, telefone };
+
+      fetch("https://script.google.com/macros/s/AKfycbzDDYxbeC_6Vr86x_Fv6uzPVle1NYiAT-NXriClAKYTRLtpfb5fGIBIQXihHVOhjAVCCw/exec", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => {
+        alert("Informações enviadas com sucesso!");
+        fecharFormulario();
+        inputs.forEach(input => input.value = "");
+      })
+      .catch(err => {
+        alert("Erro ao enviar: " + err);
+      });
+    }
+  </script>
+</body>
+</html>

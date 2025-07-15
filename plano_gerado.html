@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerador de Plano de Aula</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js "></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 10px;
+      font-size: 11px;
+    }
+    h2,
+    h3 {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      padding: 5px;
+      margin-top: 3px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 10px;
+    }
+    .objectivos textarea {
+      width: 100%;
+      height: 100px;
+      padding: 5px;
+      font-size: 11px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-top: 10px;
+    }
+    th,
+    td {
+      border: 1px solid #999;
+      padding: 4px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #0069d9;
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .col {
+      flex: 1;
+      min-width: 200px;
+      padding: 5px;
+    }
+    #avisoExportacao {
+      display: none;
+      text-align: center;
+      font-size: 18px;
+      color: red;
+      font-weight: bold;
+    }
+    #mensagemAnexo {
+      color: red;
+      font-weight: bold;
+    }
+    /* Oculta a mensagem de anexo ao gerar o PDF */
+    @media print {
+      #mensagemAnexo {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>GERADOR DE PLANO DE AULA</h2>
+
+    <form name="planoForm" onsubmit="event.preventDefault()">
+      <!-- Dados do plano -->
+      <div class="row">
+        <div class="col">
+          <label>Escola:</label>
+          <input type="text" name="escola" required />
+          <label>Nome do Professor:</label>
+          <input type="text" name="professor" required />
+          <label>Unidade Temática:</label>
+          <input type="text" name="unidade" required />
+          <label>Tema da Aula:</label>
+          <input type="text" name="tema" required onblur="gerarObjetivosLocal()" />
+          <label>Tipo de Aula:</label>
+          <input type="text" name="tipo" required />
+        </div>
+        <div class="col">
+          <label>Classe:</label>
+          <input type="text" name="classe" required />
+          <label>Turma:</label>
+          <input type="text" name="turma" required />
+          <label>Lição nº:</label>
+          <input type="number" name="licao" min="1" step="1" />
+          <label>Duração:</label>
+          <select name="duracao" required>
+            <option value="45">45 minutos</option>
+            <option value="90">90 minutos</option>
+          </select>
+          <label>Data:</label>
+          <input type="date" name="data" required />
+
+          <!-- Campo de materiais didáticos -->
+          <label><input type="checkbox" id="usarMateriais" onchange="alternarCampoMaterial()"> Aula exige material didático?</label>
+          <div id="adicionarMaterialDiv" style="display:none;">
+            <label>Adicionar material:</label>
+            <div style="display:flex; gap:5px;">
+              <input type="text" id="inputMaterial" placeholder="Ex: cartaz, marcador">
+              <button type="button" onclick="adicionarMaterial()">Adicionar</button>
+            </div>
+            <ul id="listaMateriais" style="font-size:10px; margin-top:5px;"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="objectivos">
+        <label>Objetivos Específicos:</label>
+        <textarea id="objetivosCampo" name="objetivos" required></textarea>
+      </div>
+
+      <!-- Botão de gerar plano -->
+      <button type="button" onclick="gerarPlano()">Gerar Plano de Aula</button>
+    </form>
+
+    <!-- Mensagem de aviso -->
+    <div id="avisoExportacao"></div>
+
+    <!-- Plano final -->
+    <div id="planoFinal" style="display:none; margin-top:20px;">
+      <h3>PLANO DE AULA</h3>
+      <div class="row">
+        <div class="col" id="dadosEsquerda"></div>
+        <div class="col" id="dadosDireita"></div>
+      </div>
+      <h4>Objetivos Específicos:</h4>
+      <ul id="listaObjetivos"></ul>
+      <table>
+        <thead>
+          <tr>
+            <th>TEMPO</th>
+            <th>FUNÇÕES DIDÁCTICAS</th>
+            <th>CONTEÚDOS</th>
+            <th>ATIVIDADES DO PROFESSOR</th>
+            <th>ATIVIDADES DOS ALUNOS</th>
+            <th>MÉTODOS DE ENSINO</th>
+            <th>MEIOS DE ENSINO</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaCorpo"></tbody>
+      </table>
+
+      <!-- Campo para anexar imagem -->
+      <p id="mensagemAnexo" style="color: red; font-weight: bold;">Se tiver ANEXO no livro, tire foto</p>
+      <input type="file" id="inputImagem" accept="image/*" capture="camera" onchange="mostrarImagem(event)">
+      <img id="visualizarImagem" src="" alt="Pré-visualização da imagem" style="display: none;" />
+
+      <!-- Botão de exportação -->
+      <button onclick="gerarPDF()">Exportar para PDF</button>
+    </div>
+  </div>
+
+  <script>
+    const verbosCognitivos = ["identificar", "descrever", "classificar", "definir", "explicar", "relacionar", "enumerar", "comparar"];
+    const verbosPsicomotores = ["desenhar", "montar", "construir", "organizar", "manipular", "demonstrar", "executar", "medir"];
+    const verbosAfetivos = ["valorizar", "respeitar", "cooperar", "participar", "aceitar", "comprometer-se", "defender", "refletir"];
+
+    let materiais = [];
+    let imagemDataURL = null;
+
+    function gerarObjetivosLocal() {
+      const tema = document.forms['planoForm'].tema.value.trim();
+      if (!tema) return;
+      const verboCog = verbosCognitivos[Math.floor(Math.random() * verbosCognitivos.length)];
+      const verboPsi = verbosPsicomotores[Math.floor(Math.random() * verbosPsicomotores.length)];
+      const verboAfe = verbosAfetivos[Math.floor(Math.random() * verbosAfetivos.length)];
+      const objetivos = `• ${verboCog} ${tema};\n• ${verboPsi} ${tema} em situação prática;\n• ${verboAfe} a importância de ${tema} no quotidiano.`;
+      document.getElementById("objetivosCampo").value = objetivos;
+    }
+
+    function gerarPlano() {
+      const form = document.forms['planoForm'];
+      const tema = form.tema.value;
+
+      // Preenche dados à esquerda
+      document.getElementById('dadosEsquerda').innerHTML = `
+        <p><strong>Escola:</strong> ${form.escola.value}</p>
+        <p><strong>Professor:</strong> ${form.professor.value}</p>
+        <p><strong>Unidade Temática:</strong> ${form.unidade.value}</p>
+        <p><strong>Tema:</strong> ${tema}</p>
+        <p><strong>Tipo de Aula:</strong> ${form.tipo.value}</p>`;
+
+      // Preenche dados à direita
+      document.getElementById('dadosDireita').innerHTML = `
+        <p><strong>Classe:</strong> ${form.classe.value}</p>
+        <p><strong>Turma:</strong> ${form.turma.value}</p>
+        <p><strong>Lição nº:</strong> ${form.licao.value || "—"}</p>
+        <p><strong>Duração:</strong> ${form.duracao.value} minutos</p>
+        <p><strong>Data:</strong> ${form.data.value}</p>
+        ${materiais.length ? `<p><strong>Materiais:</strong><br>${materiais.map(m => `• ${m}`).join('<br>')}</p>` : ''}`;
+
+      // Objetivos
+      const objetivos = form.objetivos.value.trim().split('\n').map(l => `<li>${l}</li>`).join('');
+      document.getElementById('listaObjetivos').innerHTML = objetivos;
+
+      // Estrutura da tabela
+      const classe = form.classe.value.toLowerCase();
+      const classeLimpa = classe.replace(/[^\d]/g, '');
+      const isClasseInicial = classeLimpa === '1' || classeLimpa === '2';
+      const meiosEnsinoIniciais = 'Livro do aluno';
+      const meiosEnsinoNormais = 'Quadro, giz, livro do aluno, esferográfica';
+      const duracao = parseInt(form.duracao.value);
+      const fator = duracao === 90 ? 2 : 1;
+      const tempo1 = `${5 * fator} min`;
+      const tempo2 = `${20 * fator} min`;
+      const tempo3 = `${10 * fator} min`;
+      const tempo4 = `${10 * fator} min`;
+
+      const tabela = document.getElementById('tabelaCorpo');
+      tabela.innerHTML = `
+        <tr>
+          <td>${tempo1}</td>
+          <td><strong>Introdução e Motivação</strong></td>
+          <td>• Saudação<br>• Marcação de presença<br>• Recapitulação da aula anterior<br>• Apresentação do tema "${tema}"</td>
+          <td>• Saúda os alunos<br>• Chama os nomes<br>• Questiona sobre aula anterior<br>• Introduz o tema "${tema}"</td>
+          <td>• Saúdam o professor<br>• Respondem à chamada<br>• Participam nas perguntas<br>• Anotam o tema</td>
+          <td>Elaboração conjunta</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : meiosEnsinoNormais}</td>
+        </tr>
+        <tr>
+          <td>${tempo2}</td>
+          <td>Mediação e Assimilação</td>
+          <td>• Exploração das possíveis ideias dos alunos<br>• Explicação do tema "${tema}"<br>• Esclarecimento das possíveis dúvidas</td>
+          <td>• Explora ideias dos alunos<br>• Explica o conteúdo<br>• Sanar dúvidas<br>• Dá exemplos relacionados com "${tema}"</td>
+          <td>• Partilham ideias<br>• Escutam e anotam<br>• Fazem perguntas sobre "${tema}"</td>
+          <td>Elaboração conjunta</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : 'Quadro, giz, livro do aluno, cartaz'}</td>
+        </tr>
+        <tr>
+          <td>${tempo3}</td>
+          <td>Domínio e Consolidação</td>
+          <td>Exercícios sobre ${tema}</td>
+          <td>• Aplica exercícios<br>• Orienta e esclarece dúvidas</td>
+          <td>• Resolvem os exercícios no ${isClasseInicial ? 'livro do aluno' : 'caderno'}<br>• Corrigem com ajuda</td>
+          <td>Trabalho independente</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : 'Caderno, esferográfica, livro do aluno'}</td>
+        </tr>
+        <tr>
+          <td>${tempo4}</td>
+          <td>Controlo e Avaliação</td>
+          <td>• Correção dos exercícios<br>• Breve resumo da aula<br>• Marcação do TPC</td>
+          <td>• Corrige com a turma<br>• Resume os pontos principais<br>• Marca o TPC sobre "${tema}"</td>
+          <td>• Participam da correção<br>• Anotam o resumo<br>• Anotam o TPC no ${isClasseInicial ? 'livro do aluno' : 'caderno'}</td>
+          <td>Trabalho independente</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : 'Quadro, caderno, esferográfica, apagador'}</td>
+        </tr>`;
+
+      // Exibe o plano imediatamente
+      document.getElementById('planoFinal').style.display = 'block';
+
+      // Mostra o aviso por 10 segundos
+      const aviso = document.getElementById('avisoExportacao');
+      aviso.textContent = "⚠️ AVISO: APENAS DEVE EXPORTAR O PLANO (PDF) NO MODO HORIZONTAL DO TEU TELEFONE!";
+      aviso.style.color = "red";
+      aviso.style.fontSize = "18px";
+      aviso.style.fontWeight = "bold";
+      aviso.style.textAlign = "center";
+      aviso.style.marginTop = "10px";
+      aviso.style.display = "block";
+
+      setTimeout(() => {
+        aviso.style.display = "none";
+      }, 10000); // 10 segundos
+    }
+
+    function mostrarImagem(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        imagemDataURL = e.target.result;
+        const imgPreview = document.getElementById('visualizarImagem');
+        imgPreview.src = imagemDataURL;
+        imgPreview.style.display = 'block';
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function gerarPDF() {
+      const emPe = window.matchMedia("(orientation: portrait)").matches;
+      if (emPe) {
+        alert("Por favor, vire o celular para o modo horizontal antes de exportar.");
+        return;
+      }
+
+      const elemento = document.getElementById("planoFinal");
+      const botao = elemento.querySelector("button");
+      botao.style.display = "none";
+
+      html2canvas(elemento, { scale: 2, useCORS: true }).then(canvas => {
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+        const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "cm", format: "a4" });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min(pageWidth / (canvas.width / 100), pageHeight / (canvas.height / 100));
+        const imgWidth = (canvas.width / 100) * ratio;
+        const imgHeight = (canvas.height / 100) * ratio;
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+
+        // Primeira página: plano de aula
+        pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
+
+        // Segunda página: imagem do anexo
+        if (imagemDataURL) {
+          pdf.addPage();
+          const imgProps = pdf.getImageProperties(imagemDataURL);
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          pdf.addImage(imagemDataURL, "JPEG", 0, 0, pdfWidth, pdfHeight);
+        }
+
+        pdf.save("plano_de_aula.pdf");
+        botao.style.display = "inline-block";
+      });
+    }
+
+    function alternarCampoMaterial() {
+      document.getElementById('adicionarMaterialDiv').style.display =
+        document.getElementById('usarMateriais').checked ? 'block' : 'none';
+    }
+
+    function adicionarMaterial() {
+      const input = document.getElementById('inputMaterial');
+      const valor = input.value.trim();
+      if (valor) {
+        materiais.push(valor);
+        const li = document.createElement('li');
+        li.textContent = valor;
+        document.getElementById('listaMateriais').appendChild(li);
+        input.value = '';
+      }
+    }
+  </script>
+</body>
+</html>
