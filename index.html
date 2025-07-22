@@ -1,22 +1,17 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gerador de Plano de Aula</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+      margin: 0; padding: 0; box-sizing: border-box;
       font-family: Arial, sans-serif;
     }
-
     body {
       background-color: #f4f4f4;
-      position: relative;
     }
-
     header {
       background-color: #007BFF;
       color: white;
@@ -25,60 +20,51 @@
       align-items: center;
       justify-content: space-between;
     }
-
     .menu-toggle {
       font-size: 30px;
       cursor: pointer;
     }
-
     .account-button {
-      background-color: #ffffff;
+      background-color: white;
       color: #007BFF;
       border: 1px solid #007BFF;
       padding: 8px 15px;
       font-size: 14px;
       border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
-
-    .account-button:hover {
-      background-color: #f0f8ff;
-    }
-
     h1 {
       font-size: 24px;
       text-align: center;
       margin-top: 30px;
-      padding: 0 20px;
       color: #333;
     }
-
     .main-button {
       display: block;
       width: 80%;
       max-width: 400px;
-      margin: 60px auto 0 auto;
+      margin: 60px auto 0;
       padding: 15px;
       font-size: 18px;
       font-weight: bold;
       color: white;
-      background-color: #ccc;
+      background-color: #007BFF;
       border: none;
       border-radius: 8px;
       text-align: center;
       text-decoration: none;
     }
-
+    .main-button:hover {
+      background-color: #0056b3;
+    }
     .button-group {
       max-width: 400px;
-      margin: 30px auto 0 auto;
+      margin: 30px auto;
       display: flex;
       flex-direction: column;
       gap: 15px;
       padding: 0 20px;
     }
-
     .action-button {
       background-color: #ffffff;
       color: #333;
@@ -86,23 +72,15 @@
       border-radius: 8px;
       padding: 12px 20px;
       font-size: 16px;
-      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 10px;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: background-color 0.3s ease;
     }
-
     .action-button:hover {
       background-color: #f0f0f0;
     }
-
-    .icon {
-      font-size: 20px;
-    }
-
     .sidebar {
       height: 100%;
       width: 250px;
@@ -115,22 +93,19 @@
       z-index: 1000;
       padding-top: 60px;
     }
-
     .sidebar.open {
       left: 0;
     }
-
     .sidebar ul {
       list-style: none;
       padding: 10px;
     }
-
     .sidebar ul li {
       padding: 15px 20px;
       border-bottom: 1px solid #eee;
       font-size: 16px;
+      cursor: pointer;
     }
-
     .overlay {
       display: none;
       position: fixed;
@@ -139,28 +114,22 @@
       background-color: transparent;
       z-index: 999;
     }
-
     .overlay.active {
       display: block;
     }
-
     .form-modal {
       display: none;
       position: fixed;
       z-index: 1001;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
     }
-
     .form-modal.active {
       display: flex;
     }
-
     .form-container {
       background-color: white;
       padding: 25px;
@@ -169,145 +138,171 @@
       max-width: 400px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
-
     .form-container h2 {
       margin-bottom: 15px;
     }
-
     .form-container label {
       display: block;
       margin-top: 10px;
       margin-bottom: 5px;
     }
-
     .form-container input {
       width: 100%;
       padding: 8px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     .form-buttons {
       margin-top: 20px;
       display: flex;
       justify-content: space-between;
     }
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007BFF;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+    .loading-spinner.active {
+      display: inline-block;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @media (max-width: 480px) {
+      .main-button { width: 90%; font-size: 16px; }
+      .form-container { padding: 15px; }
+    }
+    footer {
+      text-align: center;
+      font-size: 12px;
+      padding: 20px;
+      color: #777;
+    }
   </style>
 </head>
 <body>
-
   <header>
-    <div class="menu-toggle" onclick="toggleMenu()">☰</div>
-    <div>
-      <button class="account-button" onclick="abrirFormulario()">Minha Conta</button>
-    </div>
+    <div class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu lateral">☰</div>
+    <button class="account-button" onclick="abrirFormulario()">Minha Conta</button>
   </header>
-
-  <div id="sidebar" class="sidebar">
+  <nav id="sidebar" class="sidebar">
     <ul>
       <li>1. Gerar Plano de Aula</li>
       <li>2. Doar</li>
       <li>3. Tema</li>
       <li>4. Definições</li>
       <li>5. Sobre</li>
-      <li>6. Termos e Políticas de Privacidade</li>
+      <li onclick="mostrarTermos()">6. Termos e Políticas de Uso</li>
     </ul>
-  </div>
-
+  </nav>
   <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
-
-  <h1>GERADOR DE PLANO DE AULA</h1>
-
-  <a href="plano_gerado.html" class="main-button">Gerar Plano de Aula</a>
-
-  <div class="button-group">
-    <button class="action-button"><span class="icon">👤</span>Fazer Doação</button>
-    <button class="action-button"><span class="icon">💬</span>Fale Comigo</button>
-    <button class="action-button">Termos e Políticas de Uso</button>
-  </div>
-
+  <main>
+    <h1>GERADOR DE PLANO DE AULA</h1>
+    <a href="plano_gerado.html" class="main-button">Gerar Plano de Aula</a>
+    <div class="button-group">
+      <button class="action-button" onclick="window.open('https://wa.me/258864920606')">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+      </button>
+      <button class="action-button" onclick="window.location.href='mailto:acessodigital5@gmail.com'">
+        <i class="fas fa-envelope"></i> Enviar Email
+      </button>
+      <button class="action-button" onclick="mostrarTermos()">
+        <i class="fas fa-file-alt"></i> Termos e Políticas de Uso
+      </button>
+    </div>
+  </main>
+  <footer>
+    &copy; 2025 Gerador de Plano de Aula. Todos os direitos reservados.
+  </footer>
   <div id="form-modal" class="form-modal">
     <div class="form-container">
       <h2>Minha Conta</h2>
-      <label>Nome:</label>
-      <input type="text" placeholder="Digite seu nome" />
-      <label>Email:</label>
-      <input type="email" placeholder="Digite seu email" />
-      <label>Escola onde trabalha:</label>
-      <input type="text" placeholder="Nome da escola" />
-      <label>Número de Telefone:</label>
-      <input type="tel" placeholder="Ex: 84xxxxxxx" />
+      <label for="nome">Nome:</label>
+      <input type="text" id="nome" placeholder="Digite seu nome" />
+      <label for="email">Email:</label>
+      <input type="email" id="email" placeholder="Digite seu email" />
+      <label for="escola">Escola onde trabalha:</label>
+      <input type="text" id="escola" placeholder="Nome da escola" />
+      <label for="telefone">Número de Telefone:</label>
+      <input type="tel" id="telefone" placeholder="Ex: 84xxxxxxx" />
       <div class="form-buttons">
         <button onclick="fecharFormulario()">Cancelar</button>
-        <button onclick="enviarFormulario()">Salvar</button>
+        <button onclick="enviarFormulario()">Salvar <span id="spinner" class="loading-spinner"></span></button>
       </div>
     </div>
   </div>
-
   <script>
     function toggleMenu() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('overlay');
-      const isOpen = sidebar.classList.contains('open');
-
-      if (isOpen) {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-      } else {
-        sidebar.classList.add('open');
-        overlay.classList.add('active');
-      }
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('overlay').classList.toggle('active');
     }
-
     function abrirFormulario() {
       document.getElementById('form-modal').classList.add('active');
     }
-
     function fecharFormulario() {
       document.getElementById('form-modal').classList.remove('active');
     }
-
-    function enviarFormulario() {
-      const inputs = document.querySelectorAll('.form-container input');
-      const nome = inputs[0].value.trim();
-      const email = inputs[1].value.trim();
-      const escola = inputs[2].value.trim();
-      const telefone = inputs[3].value.trim();
-
-      if (!nome || !email || !escola || !telefone) {
-        alert("Por favor, preencha todos os campos.");
-        return;
-      }
-
-      const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailValido.test(email)) {
-        alert("Digite um email válido.");
-        return;
-      }
-
-      if (!/^\d{9,}$/.test(telefone)) {
-        alert("Digite um número de telefone válido com pelo menos 9 dígitos.");
-        return;
-      }
-
-      const data = { nome, email, escola, telefone };
-
-      fetch("https://script.google.com/macros/s/AKfycbzDDYxbeC_6Vr86x_Fv6uzPVle1NYiAT-NXriClAKYTRLtpfb5fGIBIQXihHVOhjAVCCw/exec", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-      .then(res => {
-        alert("Informações enviadas com sucesso!");
-        fecharFormulario();
-        inputs.forEach(input => input.value = "");
-      })
-      .catch(err => {
-        alert("Erro ao enviar: " + err);
-      });
+    function mostrarTermos() {
+      alert("Termos e Políticas de Uso:\n\nEste sistema foi desenvolvido para apoiar professores no processo de planejamento didático de forma prática, acessível e automatizada.\n\nTodos os dados inseridos pelos usuários serão tratados com responsabilidade e usados exclusivamente para fins de aprimoramento da experiência educacional.\n\nO sistema é gratuito e não se responsabiliza por decisões tomadas com base nos planos gerados. O uso da ferramenta implica concordância com esses termos e responsabilidade pelo uso consciente e ético.\n\nO autor reserva-se o direito de realizar melhorias e atualizações sem aviso prévio.");
     }
+    function enviarFormulario() {
+      const nome = document.getElementById('nome');
+      const email = document.getElementById('email');
+      const escola = document.getElementById('escola');
+      const telefone = document.getElementById('telefone');
+      const spinner = document.getElementById('spinner');[nome, email, escola, telefone].forEach(input => input.style.border = "1px solid #ccc");
+
+  if (!nome.value || !email.value || !escola.value || !telefone.value) {
+    [nome, email, escola, telefone].forEach(input => {
+      if (!input.value) input.style.border = "1px solid red";
+    });
+    alert("Por favor, preencha todos os campos.");
+    return;
+  }
+
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailValido.test(email.value)) {
+    email.style.border = "1px solid red";
+    alert("Digite um email válido.");
+    return;
+  }
+
+  if (!/^\d{9,}$/.test(telefone.value)) {
+    telefone.style.border = "1px solid red";
+    alert("Digite um número de telefone válido com pelo menos 9 dígitos.");
+    return;
+  }
+
+  spinner.classList.add("active");
+
+  const data = {
+    nome: nome.value.trim(),
+    email: email.value.trim(),
+    escola: escola.value.trim(),
+    telefone: telefone.value.trim()
+  };
+
+  fetch("https://script.google.com/macros/s/AKfycbwz-h_uBAyVqf0EPQWs9mim5LwEPZe0r1dt4UgLI5MTKf09BwbL4vZVzI0YCnpOKiRC/exec", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  .then(() => {
+    alert("Informações enviadas com sucesso!");
+    fecharFormulario();
+    [nome, email, escola, telefone].forEach(input => input.value = "");
+  })
+  .catch(() => alert("Erro ao enviar: Verifique sua conexão com a internet."))
+  .finally(() => spinner.classList.remove("active"));
+}
+
   </script>
 </body>
 </html>
