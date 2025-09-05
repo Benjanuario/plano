@@ -120,6 +120,8 @@
           <input type="text" name="escola" required />
           <label>Nome do Professor:</label>
           <input type="text" name="professor" required />
+          <label>Disciplina:</label>
+          <input type="text" name="disciplina" required />
           <label>Unidade Temática:</label>
           <input type="text" name="unidade" required />
           <label>Tema da Aula:</label>
@@ -245,6 +247,7 @@ Participar activamente das discussões sobre "${tema}".`;
       document.getElementById('dadosEsquerda').innerHTML = `
         <p><strong>Escola:</strong> ${form.escola.value}</p>
         <p><strong>Professor:</strong> ${form.professor.value}</p>
+        <p><strong>Disciplina:</strong> ${form.disciplina.value}</p>
         <p><strong>Unidade Temática:</strong> ${form.unidade.value}</p>
         <p><strong>Tema:</strong> ${tema}</p>
         <p><strong>Tipo de Aula:</strong> ${form.tipo.value}</p>`;
