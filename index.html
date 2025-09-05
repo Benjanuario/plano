@@ -171,7 +171,8 @@
   </main>
 
   <footer>
-    &copy; 2025 Gerador de Plano de Aula. Todos os direitos reservados.
+    &copy; 2025 Gerador de Plano de Aula. Todos os direitos reservados.     
+    Benjanuário.
   </footer>
 
   <!-- Modal Conta -->
@@ -209,16 +210,6 @@
     }
 
     // ---- Histórico ----
-    function salvarHistorico(disciplina, classe, linkPDF) {
-      const data = new Date();
-      const dataStr = data.toLocaleDateString('pt-BR');
-      const nomePlano = `Plano ${disciplina} - ${classe} (${dataStr})`;
-
-      let historico = JSON.parse(localStorage.getItem("historicoPlanos")) || [];
-      historico.push({ nome: nomePlano, link: linkPDF });
-      localStorage.setItem("historicoPlanos", JSON.stringify(historico));
-    }
-
     function mostrarHistorico() {
       const container = document.getElementById("historico-container");
       const lista = document.getElementById("lista-historico");
@@ -293,4 +284,4 @@
     }
   </script>
 </body>
-          </html>
+</html>
