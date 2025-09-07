@@ -1,164 +1,428 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pagamento e Desbloqueio de PDFs</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<style>
-body { font-family: 'Times New Roman', serif; background: #e0f7fa; margin:0; padding:0; color:#333; }
-header { background-color: #007BFF; color:white; padding:20px; text-align:center; font-size:22px; font-weight:bold; box-shadow:0 3px 6px rgba(0,0,0,0.15);}
-main { max-width:750px; margin:30px auto; padding:20px; background:#fff; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.1);}
-h2 { text-align:center; margin-bottom:15px; color:#007BFF; }
-.instrucoes-gerais { font-size:15px; margin-bottom:20px; text-align:center; line-height:1.5; }
+  <meta charset="UTF-8" />
+  <title>Gerador de Plano de Aula</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
 
-/* Pacotes */
-.pacotes-container { display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
-.pacote { flex:1; min-width:150px; padding:15px; border-radius:12px; text-align:center; font-weight:bold; font-size:15px; color:white; cursor:default; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
-.pacote:hover { transform:scale(1.08); box-shadow:0 8px 20px rgba(0,0,0,0.25); }
-.pacote1 { background-color:#6c757d; }
-.pacote5 { background-color:#007BFF; }
-.pacote15 { background-color:#28a745; }
-.pacote20 { background-color:#ffc107; color:#333; }
+    h2, h3 {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 14px;
+    }
 
-/* Métodos */
-.metodo-container { text-align:center; margin:25px 0 10px 0; }
-.metodo-container p { font-weight:bold; font-size:16px; margin-bottom:10px; }
-.metodo-selecao button { margin:10px; padding:18px 15px; font-size:16px; border-radius:12px; border:none; cursor:pointer; transition:0.3s; font-weight:bold; display:inline-flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 4px 10px rgba(0,0,0,0.15);}
-button#btnEmola { background-color:#FFD700; color:#333; }
-button#btnMpesa { background-color:#FF4500; color:white; }
-button:hover { opacity:0.85; transform: translateY(-2px); }
+    label {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+    }
 
-/* Cartões de Método */
-.metodo-card { display:none; margin:15px auto; padding:18px; border-radius:12px; text-align:center; background:#f8f9fa; box-shadow:0 5px 12px rgba(0,0,0,0.15); transition:all 0.3s ease; }
-.metodo-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.2); }
-.metodo-card i { font-size:54px; margin-bottom:10px; display:block; }
-.metodo-card p { font-size:16px; margin:5px 0; font-weight:bold; }
-.metodo-card button { margin:5px; padding:10px 16px; border-radius:8px; border:none; cursor:pointer; font-size:14px; transition:0.3s; }
-.metodo-card button:hover { opacity:0.9; transform: translateY(-2px); }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 5px;
+      margin-top: 3px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 12px;
+    }
 
-/* Campo de código */
-.input-container { display:none; justify-content:center; gap:8px; margin-top:15px; flex-direction:column; align-items:center; }
-input[type="text"] { padding:12px; font-size:15px; border-radius:8px; border:1px solid #ccc; width:220px; text-align:center; text-transform:uppercase;}
-button.confirmar-btn { padding:12px 16px; font-size:15px; border-radius:8px; border:none; background-color:#28a745; color:white; cursor:pointer; transition:0.3s; }
-button.confirmar-btn:hover { background-color:#218838; transform: translateY(-2px); }
-.mensagem { margin-top:18px; text-align:center; font-size:17px; font-weight:bold; }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
 
-/* Spinner */
-.spinner { border:4px solid #f3f3f3; border-top:4px solid #007BFF; border-radius:50%; width:24px; height:24px; animation:spin 1s linear infinite; display:inline-block; margin-left:8px; vertical-align:middle; }
-@keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
-</style>
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 10px;
+    }
+
+    .objectivos textarea {
+      width: 100%;
+      height: 100px;
+      padding: 5px;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #999;
+      padding: 4px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #0069d9;
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 200px;
+      padding: 5px;
+    }
+
+    #avisoExportacao {
+      display: none;
+      text-align: center;
+      font-size: 15px;
+      color: red;
+      font-weight: bold;
+    }
+
+    @media print {
+      #mensagemAnexo,
+      #selecaoTipoAnexo {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
 <body>
-<header>Pagamento e Desbloqueio de PDFs</header>
+  <div class="container">
+    <h2>GERADOR DE PLANO DE AULA</h2>
 
-<main>
-<h2>Como Funciona</h2>
-<p class="instrucoes-gerais">
-1️⃣ Veja os pacotes disponíveis abaixo.<br>
-2️⃣ Escolha Emola ou Mpesa para efetuar a transferência.<br>
-3️⃣ Receba seu código secreto via SMS.<br>
-4️⃣ Digite o código para desbloquear seu pacote.
-</p>
+    <form name="planoForm" onsubmit="event.preventDefault()">
+      <div class="row">
+        <div class="col">
+          <label>Escola:</label>
+          <input type="text" name="escola" required />
+          <label>Nome do Professor:</label>
+          <input type="text" name="professor" required />
+          <label>Disciplina:</label>
+          <input type="text" name="disciplina" required />
+          <label>Unidade Temática:</label>
+          <input type="text" name="unidade" required />
+          <label>Tema da Aula:</label>
+<input type="text" name="tema" required maxlength="100" onblur="gerarObjetivosLocal()" />
+          <label>Tipo de Aula:</label>
+          <input type="text" name="tipo" required />
+        </div>
+        <div class="col">
+<select name="classe" required>
+  <option value="">Selecione a classe</option>
+  <option value="1">1ª Classe</option>
+  <option value="2">2ª Classe</option>
+  <option value="3">3ª Classe</option>
+  <option value="4">4ª Classe</option>
+  <option value="5">5ª Classe</option>
+  <option value="6">6ª Classe</option>
+  <option value="7">7ª Classe</option>
+  <option value="8">8ª Classe</option>
+  <option value="9">9ª Classe</option>
+  <option value="10">10ª Classe</option>
+  <option value="11">11ª Classe</option>
+  <option value="12">12ª Classe</option>
+</select>
+          <label>Turma:</label>
+          <input type="text" name="turma" required />
+          <label>Lição nº:</label>
+          <input type="number" name="licao" min="1" step="1" />
+          <label>Duração:</label>
+          <select name="duracao" required>
+            <option value="45">45 minutos</option>
+            <option value="90">90 minutos</option>
+          </select>
+          <label>Data:</label>
+          <input type="date" name="data" required />
+          <label><input type="checkbox" id="usarMateriais" onchange="alternarCampoMaterial()"> Aula exige material didático?</label>
+          <div id="adicionarMaterialDiv" style="display:none;">
+            <label>Adicionar material:</label>
+            <div style="display:flex; gap:12px;">
+              <input type="text" id="inputMaterial" placeholder="Ex: cartaz, marcador">
+              <button type="button" onclick="adicionarMaterial()">Adicionar</button>
+            </div>
+            <ul id="listaMateriais" style="font-size:12px; margin-top:12px;"></ul>
+          </div>
+        </div>
+      </div>
 
-<div class="pacotes-container">
-  <div class="pacote pacote1">1 PDF - 5 MT</div>
-  <div class="pacote pacote5">5 PDFs - 25 MT</div>
-  <div class="pacote pacote15">15 PDFs - 60 MT</div>
-  <div class="pacote pacote20">20 PDFs - 80 MT</div>
-</div>
+      <div class="objectivos">
+        <label>Objetivos Específicos:</label>
+        <textarea id="objetivosCampo" name="objetivos" required></textarea>
+      </div>
 
-<div class="metodo-container">
-<p>Selecione o Método de Pagamento:</p>
-<div class="metodo-selecao">
-<button id="btnEmola" onclick="selecionarMetodo('Emola')"><i class="fas fa-wallet"></i>Emola</button>
-<button id="btnMpesa" onclick="selecionarMetodo('Mpesa')"><i class="fas fa-mobile-alt"></i>Mpesa</button>
-</div>
-</div>
+      <button type="button" onclick="gerarPlano()">Gerar Plano de Aula</button>
+    </form>
 
-<div id="metodo-Emola" class="metodo-card">
-<i class="fas fa-wallet" style="color:#FFD700;"></i>
-<p>Emola</p>
-<p>Número: <strong>864920606</strong></p>
-<button onclick="copiarNumero('864920606')">Copiar</button>
-<button onclick="window.location.href='tel:*898%23'">Pagar Agora</button>
-<p style="margin-top:8px; font-size:14px; font-weight:bold;">Confirmação: Benjamim Januário Paulino</p>
-</div>
+    <div id="avisoExportacao"></div>
 
-<div id="metodo-Mpesa" class="metodo-card">
-<i class="fas fa-mobile-alt" style="color:#FF4500;"></i>
-<p>Mpesa</p>
-<p>Número: <strong>848960732</strong></p>
-<button onclick="copiarNumero('848960732')">Copiar</button>
-<button onclick="window.location.href='tel:*150%23'">Pagar Agora</button>
-<p style="margin-top:8px; font-size:14px; font-weight:bold;">Confirmação: Benjamim Januário Paulino</p>
-</div>
+    <div id="planoFinal" style="display:none; margin-top:20px;">
+      <h3>PLANO DE AULA</h3>
+      <div class="row">
+        <div class="col" id="dadosEsquerda"></div>
+        <div class="col" id="dadosDireita"></div>
+      </div>
+      <h4>Objetivos Específicos:</h4>
+      <ul id="listaObjetivos"></ul>
+      <table>
+        <thead>
+          <tr>
+            <th>TEMPO</th>
+            <th>FUNÇÕES DIDÁCTICAS</th>
+            <th>CONTEÚDOS</th>
+            <th>ACTIVIDADES DO PROFESSOR</th>
+            <th>ACTIVIDADES DOS ALUNOS</th>
+            <th>MÉTODOS DE ENSINO</th>
+            <th>MEIOS DE ENSINO</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaCorpo"></tbody>
+      </table>
 
-<div class="input-container" id="input-codigo">
-  <input type="text" id="codigo-acesso" placeholder="Introduza o Código de Desbloqueio" maxlength="8">
-  <span id="feedback-codigo" style="color:#dc3545; font-size:13px; display:block; text-align:center; margin-top:5px;"></span>
-  <button class="confirmar-btn" onclick="validarCodigo()">Confirmar</button>
-</div>
+      <div id="selecaoTipoAnexo" style="margin-top: 10px;">
+        <label><strong>Como deseja adicionar o anexo?</strong></label>
+        <select id="tipoAnexo" onchange="alternarTipoAnexo()">
+          <option value="imagem">Imagem (foto do livro)</option>
+          <option value="texto">Texto explicativo</option>
+        </select>
+      </div>
 
-<div id="mensagem" class="mensagem"></div>
+      <div id="opcaoImagem" style="margin-top: 10px;">
+        <input type="file" id="inputImagem" accept="image/*" capture="environment" onchange="mostrarImagem(event)">
+        <img id="visualizarImagem" src="" alt="Pré-visualização da imagem" style="display: none; max-width: 100%; margin-top: 5px;" />
+      </div>
 
-<script>
-const URL_APP = "https://script.google.com/macros/s/AKfycby1xITm5XHnhNyjLC6szRjB4gAFP63x-YDcQ74GcmC0veJO-iJfE8Y31YKTwX37q1BT6Q/exec";
+      <div id="opcaoTexto" style="display:none; margin-top: 10px;">
+        <label for="textoAnexo"><strong>Digite o conteúdo do anexo:</strong></label>
+        <textarea id="textoAnexo" placeholder="Ex: resumo do conteúdo, exemplo do livro..." style="width:100%; height:80px;"></textarea>
+      </div>
+      <button onclick="irParaPagamento()">Exportar para PDF</button>
+    </div>
+  </div>
 
-const inputCodigo = document.getElementById('codigo-acesso');
-const feedback = document.getElementById('feedback-codigo');
+  <script>
+    const verbosCognitivos = ["identificar", "descrever", "classificar", "definir", "explicar", "relacionar", "enumerar", "comparar"];
+    const verbosPsicomotores = ["desenhar", "montar", "construir", "organizar", "manipular", "demonstrar", "executar", "medir"];
+    const verbosAfetivos = ["valorizar", "respeitar", "cooperar", "participar", "aceitar", "comprometer-se", "defender", "refletir"];
 
-inputCodigo.addEventListener('input', () => {
-  let valor = inputCodigo.value.toUpperCase();
-  const novoValor = valor.replace(/[^A-Z0-9]/g, '');
-  if(valor !== novoValor){
-    feedback.innerText = "❌ Apenas caracteres alfanuméricos são permitidos!";
-  } else {
-    feedback.innerText = "";
-  }
-  inputCodigo.value = novoValor.slice(0, 8);
-});
+    let materiais = [];
+    let imagemDataURL = null;
 
-function selecionarMetodo(metodo){
-  document.getElementById('metodo-Emola').style.display = metodo==='Emola'?'block':'none';
-  document.getElementById('metodo-Mpesa').style.display = metodo==='Mpesa'?'block':'none';
-  document.getElementById('input-codigo').style.display = 'flex';
-}
+    function gerarObjetivosLocal() {
+      const tema = document.forms['planoForm'].tema.value.trim();
+      if (!tema) return;
+      const objetivos =
+`Explicar os conteúdos fundamentais de "${tema}";
+Aplicar o conhecimento de "${tema}" em atividades práticas;
+Participar activamente das discussões sobre "${tema}".`;
+      document.getElementById("objetivosCampo").value = objetivos;
+    }
 
-function copiarNumero(numero){ navigator.clipboard.writeText(numero).then(()=> alert('Número copiado!')); }
+    function gerarPlano() {
+      const form = document.forms['planoForm'];
+      const tema = form.tema.value;
 
-function validarCodigo(){
-  const codigo = inputCodigo.value.trim().toUpperCase();
-  const msg = document.getElementById('mensagem');
+      document.getElementById('dadosEsquerda').innerHTML = `
+        <p><strong>Escola:</strong> ${form.escola.value}</p>
+        <p><strong>Professor:</strong> ${form.professor.value}</p>
+        <p><strong>Disciplina:</strong> ${form.disciplina.value}</p>
+        <p><strong>Unidade Temática:</strong> ${form.unidade.value}</p>
+        <p><strong>Tema:</strong> ${tema}</p>
+        <p><strong>Tipo de Aula:</strong> ${form.tipo.value}</p>`;
 
-  if(codigo.length !== 8){
-    msg.style.color = "#dc3545";
-    msg.innerText = "❌ O código deve ter 8 caracteres.";
-    return;
-  }
+      document.getElementById('dadosDireita').innerHTML = `
+        <p><strong>Classe:</strong> ${form.classe.value}</p>
+        <p><strong>Turma:</strong> ${form.turma.value}</p>
+        <p><strong>Lição nº:</strong> ${form.licao.value || "—"}</p>
+        <p><strong>Duração:</strong> ${form.duracao.value} minutos</p>
+        <p><strong>Data:</strong> ${form.data.value}</p>
+        ${materiais.length ? `<p><strong>Materiais:</strong><br>${materiais.map(m => `• ${m}`).join('<br>')}</p>` : ''}`;
 
-  msg.style.color = "#007BFF";
-  msg.innerHTML = '🔍 Verificando o Código <span class="spinner"></span>';
+      const objetivos = form.objetivos.value.trim().split('\n').map(l => `<li>${l}</li>`).join('');
+      document.getElementById('listaObjetivos').innerHTML = objetivos;
 
-  fetch(`${URL_APP}?codigo=${codigo}`)
-    .then(response => response.json())
-    .then(data => {
-      if(data.valido){
-        msg.style.color = "#28a745";
-        msg.innerText = `🎉 Código válido! PDFs restantes: ${data.restante}`;
-        // Aqui você pode chamar gerarPDFDoPlano() ou baixar o PDF dinâmico
-      } else {
-        msg.style.color = "#dc3545";
-        msg.innerText = `❌ ${data.msg}`;
+      const classe = form.classe.value.toLowerCase();
+      const classeLimpa = classe.replace(/[^\d]/g, '');
+      const isClasseInicial = classeLimpa === '1' || classeLimpa === '2';
+      const meiosEnsinoIniciais = 'Livro do aluno';
+      const meiosEnsinoNormais = 'Quadro, giz, livro do aluno, esferográfica';
+      const duracao = parseInt(form.duracao.value);
+      const fator = duracao === 90 ? 2 : 1;
+      const tempo1 = `${5 * fator} min`;
+      const tempo2 = `${20 * fator} min`;
+      const tempo3 = `${10 * fator} min`;
+      const tempo4 = `${10 * fator} min`;
+
+      const tabela = document.getElementById('tabelaCorpo');
+      tabela.innerHTML = `
+        <tr>
+          <td>${tempo1}</td>
+          <td><strong>Introdução e Motivação</strong></td>
+          <td>• Saudação<br>• Marcação de presença<br>• Recapitulação da aula anterior<br>• Apresentação do tema "${tema}"</td>
+          <td>• Saúda os alunos<br>• Faz a marcação de presenças<br>• Orienta a recapitulação da aula anterior<br>• Introduz o tema "${tema}"</td>
+          <td>• Saúdam o professor<br>• Confirma a presença<br>• Recapitulam a aula anterior sob orientação do professor<br>• Anotam o tema</td>
+          <td>Elaboração conjunta</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : meiosEnsinoNormais}</td>
+        </tr>
+        <tr>
+          <td>${tempo2}</td>
+          <td>Mediação e Assimilação</td>
+          <td>• Exploração dos possíveis pressupostos dos alunos<br>• Explicação do tema "${tema}"<br>• Esclarecimento das possíveis dúvidas</td>
+          <td>• Explora possíveis ideias dos alunos<br>• Explica o conteúdo<br>• Procura sanar as possíveis dúvidas<br>• Passa o apontamento no quadro</td>
+          <td>• Expõem as possíveis ideias<br>• Prestam atenção na explicação<br>• Expõem as possíveis dúvidas relacionadas ao tema<br>• Transcrevem o apontamento para os seus cadernos</td>
+          <td>Elaboração conjunta</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : 'Quadro, giz, livro do aluno, cartaz'}</td>
+        </tr>
+        <tr>
+          <td>${tempo3}</td>
+          <td>Domínio e Consolidação</td>
+          <td>Exercícios sobre aplicação</td>
+          <td>• Passa os exercícios no quadro<br>• Orienta a resolução dos exercícios<br>• Passa de carteira em carteira a verificar a resolução</td>
+          <td>• Transcrevem os exercícios aos cadernos<br>• Resolvem os exercícios no ${isClasseInicial ? 'livro do aluno' : 'caderno'} individualmente</td>
+          <td>Trabalho independente</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : 'Caderno, esferográfica, livro do aluno'}</td>
+        </tr>
+        <tr>
+          <td>${tempo4}</td>
+          <td>Controlo e Avaliação</td>
+          <td>• Correção dos exercícios<br>• Breve resumo da aula<br>• Marcação do TPC</td>
+          <td>• Corrige os exercícios apresentados<br>• Resume os pontos principais<br>• Faz a marcação o TPC</td>
+          <td>• Apresentam os exercícios corrigidos<br>• Prestam atenção e anotam o resumo<br>• Anotam o TPC no ${isClasseInicial ? 'livro do aluno' : 'caderno'}</td>
+          <td>Trabalho independente</td>
+          <td>${isClasseInicial ? meiosEnsinoIniciais : 'Quadro, caderno, esferográfica, apagador'}</td>
+        </tr>`;
+
+      document.getElementById('planoFinal').style.display = 'block';
+
+// SALVAR PLANO NO SESSIONSTORAGE
+const planoHTML = document.getElementById("planoFinal").innerHTML;
+sessionStorage.setItem("planoParaPDF", planoHTML);
+
+const aviso = document.getElementById('avisoExportacao');
+aviso.textContent = "⚠️ Exporte o plano de aula no modo horizontal para melhor visualização em PDF.";
+aviso.style.display = "block";
+
+setTimeout(() => {
+  aviso.style.display = "none";
+}, 10000);
+    }
+
+    function mostrarImagem(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        imagemDataURL = e.target.result;
+        const imgPreview = document.getElementById('visualizarImagem');
+        imgPreview.src = imagemDataURL;
+        imgPreview.style.display = 'block';
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+function gerarPDF() {
+      const emPe = window.matchMedia("(orientation: portrait)").matches;
+      if (emPe) {
+        alert("Por favor, vire o celular para o modo horizontal antes de exportar.");
+        return;
       }
-    })
-    .catch(err => {
-      msg.style.color = "#dc3545";
-      msg.innerText = "❌ Erro ao validar código. Tente novamente.";
-      console.error(err);
-    });
+
+      const elemento = document.getElementById("planoFinal");
+      const botao = elemento.querySelector("button");
+      botao.style.display = "none";
+
+      html2canvas(elemento, { scale: 2, useCORS: true }).then(canvas => {
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+        const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "cm", format: "a4" });
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min(pageWidth / (canvas.width / 100), pageHeight / (canvas.height / 100));
+        const imgWidth = (canvas.width / 100) * ratio;
+        const imgHeight = (canvas.height / 100) * ratio;
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+
+        pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
+
+        const tipo = document.getElementById("tipoAnexo").value;
+        if (tipo === "imagem" && imagemDataURL) {
+          pdf.addPage();
+          const imgProps = pdf.getImageProperties(imagemDataURL);
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          pdf.addImage(imagemDataURL, "JPEG", 0, 0, pdfWidth, pdfHeight);
+        } else if (tipo === "texto") {
+          const texto = document.getElementById("textoAnexo").value.trim();
+          if (texto) {
+            pdf.addPage();
+            pdf.setFontSize(14);
+            pdf.text("Anexo - Texto Adicional", 1, 2);
+            pdf.setFontSize(11);
+            const linhas = pdf.splitTextToSize(texto, pageWidth - 2);
+            pdf.text(linhas, 1, 3);
+          }
+        }
+
+        pdf.save("plano_de_aula.pdf");
+        botao.style.display = "inline-block";
+        alert("✅ O plano de aula foi exportado com sucesso em PDF.");
+      });
+    }
+
+    function alternarCampoMaterial() {
+      document.getElementById('adicionarMaterialDiv').style.display =
+        document.getElementById('usarMateriais').checked ? 'block' : 'none';
+    }
+
+    function adicionarMaterial() {
+      const input = document.getElementById('inputMaterial');
+      const valor = input.value.trim();
+      if (valor) {
+        materiais.push(valor);
+        const li = document.createElement('li');
+        li.textContent = valor;
+        document.getElementById('listaMateriais').appendChild(li);
+        input.value = '';
+      }
+    }
+
+    function alternarTipoAnexo() {
+      const tipo = document.getElementById("tipoAnexo").value;
+      document.getElementById("opcaoImagem").style.display = tipo === "imagem" ? "block" : "none";
+      document.getElementById("opcaoTexto").style.display = tipo === "texto" ? "block" : "none";
+    }
+    function irParaPagamento() {
+    // Confirma se o plano foi gerado
+    if (!sessionStorage.getItem("planoParaPDF")) {
+        alert("⚠️ Primeiro gere o plano de aula antes de exportar.");
+        return;
+    }
+    // Redireciona para a página de pagamento
+    window.location.href = "pagamento.html";
 }
-</script>
-</main>
-</body>
-</html>
+                               </script>
+                               
