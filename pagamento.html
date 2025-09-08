@@ -103,7 +103,7 @@ button.confirmar-btn:hover { background-color:#218838; transform: translateY(-2p
 <div id="mensagem" class="mensagem"></div>
 
 <script>
-const URL_APP = "https://script.google.com/macros/s/AKfycby1xITm5XHnhNyjLC6szRjB4gAFP63x-YDcQ74GcmC0veJO-iJfE8Y31YKTwX37q1BT6Q/exec";
+const URL_APP = "https://script.google.com/macros/s/AKfycbwpgiPRu2VP8anRLSSstYt7r48x9G2qWpPrpKWOzJ2cx47GOiVctaNf397iZvGcGNlxJg/exec";
 
 const inputCodigo = document.getElementById('codigo-acesso');
 const feedback = document.getElementById('feedback-codigo');
@@ -143,20 +143,51 @@ function validarCodigo(){
   fetch(`${URL_APP}?codigo=${codigo}`)
     .then(response => response.json())
     .then(data => {
-      if(data.valido){
-        msg.style.color = "#28a745";
-        msg.innerText = `🎉 Código válido! PDFs restantes: ${data.restante}`;
-        // Aqui você pode chamar gerarPDFDoPlano() ou baixar o PDF dinâmico
-      } else {
-        msg.style.color = "#dc3545";
-        msg.innerText = `❌ ${data.msg}`;
-      }
-    })
-    .catch(err => {
-      msg.style.color = "#dc3545";
-      msg.innerText = "❌ Erro ao validar código. Tente novamente.";
-      console.error(err);
+  if(data.valido){
+    msg.style.color = "#28a745";
+    msg.innerText = `🎉 Código válido! PDFs restantes: ${data.restante}`;
+
+    // Recupera o plano gerado do sessionStorage
+    const planoHTML = sessionStorage.getItem("planoParaPDF");
+    if(!planoHTML){
+        alert("❌ Nenhum plano encontrado. Gere o plano antes de tentar desbloquear.");
+        return;
+    }
+
+    // Cria um elemento temporário para gerar PDF
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = planoHTML;
+    document.body.appendChild(tempDiv);
+
+    // Gera o PDF usando html2canvas + jsPDF
+    html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+        const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "cm", format: "a4" });
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min(pageWidth / (canvas.width / 100), pageHeight / (canvas.height / 100));
+        const imgWidth = (canvas.width / 100) * ratio;
+        const imgHeight = (canvas.height / 100) * ratio;
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+
+        pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
+        pdf.save("plano_de_aula.pdf");
+
+        alert("✅ PDF desbloqueado e baixado com sucesso!");
+        tempDiv.remove();
     });
+  } else {
+    msg.style.color = "#dc3545";
+    msg.innerText = `❌ ${data.msg}`;
+  }
+})
+    .catch(err => {
+    msg.style.color = "#dc3545";
+    msg.innerText = "❌ Erro ao validar código. Tente novamente.";
+    console.error(err);
+});
 }
 </script>
 </main>
