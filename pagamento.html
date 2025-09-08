@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pagamento e Desbloqueio de PDFs</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- libs necessárias -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body { font-family: 'Times New Roman', serif; background: #e0f7fa; margin:0; padding:0; color:#333; }
 header { background-color: #007BFF; color:white; padding:20px; text-align:center; font-size:22px; font-weight:bold; box-shadow:0 3px 6px rgba(0,0,0,0.15);}
@@ -125,7 +130,26 @@ function selecionarMetodo(metodo){
   document.getElementById('input-codigo').style.display = 'flex';
 }
 
-function copiarNumero(numero){ navigator.clipboard.writeText(numero).then(()=> alert('Número copiado!')); }
+function copiarNumero(numero){
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(numero).then(()=> alert('Número copiado!')).catch(()=> fallbackCopy(numero));
+  } else {
+    fallbackCopy(numero);
+  }
+}
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    alert('Número copiado!');
+  } catch(e) {
+    prompt('Copie manualmente este número:', text);
+  }
+  ta.remove();
+}
 
 function validarCodigo(){
   const codigo = inputCodigo.value.trim().toUpperCase();
@@ -140,54 +164,78 @@ function validarCodigo(){
   msg.style.color = "#007BFF";
   msg.innerHTML = '🔍 Verificando o Código <span class="spinner"></span>';
 
-  fetch(`${URL_APP}?codigo=${codigo}`)
-    .then(response => response.json())
+  fetch(`${URL_APP}?codigo=${codigo}`, { method:'GET', mode:'cors' })
+    .then(res => {
+      if(!res.ok) throw new Error('Serviço indisponível');
+      return res.json();
+    })
     .then(data => {
-  if(data.valido){
-    msg.style.color = "#28a745";
-    msg.innerText = `🎉 Código válido! PDFs restantes: ${data.restante}`;
+      if(data && data.valido){
+        msg.style.color = "#28a745";
+        msg.innerText = `🎉 Código válido! PDFs restantes: ${data.restante}`;
 
-    // Recupera o plano gerado do sessionStorage
-    const planoHTML = sessionStorage.getItem("planoParaPDF");
-    if(!planoHTML){
-        alert("❌ Nenhum plano encontrado. Gere o plano antes de tentar desbloquear.");
-        return;
-    }
+        const planoHTML = sessionStorage.getItem("planoParaPDF");
+        if(!planoHTML){
+            alert("❌ Nenhum plano encontrado. Gere o plano antes de tentar desbloquear.");
+            return;
+        }
 
-    // Cria um elemento temporário para gerar PDF
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = planoHTML;
-    document.body.appendChild(tempDiv);
+        // sanitiza
+        const safeHTML = planoHTML.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = safeHTML;
+        document.body.appendChild(tempDiv);
 
-    // Gera o PDF usando html2canvas + jsPDF
-    html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
-        const imgData = canvas.toDataURL("image/jpeg", 1.0);
-        const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "cm", format: "a4" });
+        // anexos
+        const anexoTipo = sessionStorage.getItem("planoAnexoTipo") || '';
+        const imagemDataURL = sessionStorage.getItem("planoImagemDataURL") || '';
+        const textoAnexo = sessionStorage.getItem("planoTextoAnexo") || '';
 
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const ratio = Math.min(pageWidth / (canvas.width / 100), pageHeight / (canvas.height / 100));
-        const imgWidth = (canvas.width / 100) * ratio;
-        const imgHeight = (canvas.height / 100) * ratio;
-        const x = (pageWidth - imgWidth) / 2;
-        const y = (pageHeight - imgHeight) / 2;
+        html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
+          const imgData = canvas.toDataURL("image/jpeg", 1.0);
+          const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "cm", format: "a4" });
 
-        pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
-        pdf.save("plano_de_aula.pdf");
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const ratio = Math.min(pageWidth / (canvas.width / 100), pageHeight / (canvas.height / 100));
+          const imgWidth = (canvas.width / 100) * ratio;
+          const imgHeight = (canvas.height / 100) * ratio;
+          const x = (pageWidth - imgWidth) / 2;
+          const y = (pageHeight - imgHeight) / 2;
 
-        alert("✅ PDF desbloqueado e baixado com sucesso!");
-        tempDiv.remove();
-    });
-  } else {
-    msg.style.color = "#dc3545";
-    msg.innerText = `❌ ${data.msg}`;
-  }
-})
+          pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
+
+          // anexos
+          if (anexoTipo === 'imagem' && imagemDataURL) {
+            pdf.addPage();
+            const imgProps = pdf.getImageProperties(imagemDataURL);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            pdf.addImage(imagemDataURL, "JPEG", 0, 0, pdfWidth, pdfHeight);
+          } else if (anexoTipo === 'texto' && textoAnexo.trim()) {
+            pdf.addPage();
+            pdf.setFontSize(14);
+            pdf.text("Anexo - Texto Adicional", 1, 2);
+            pdf.setFontSize(11);
+            const linhas = pdf.splitTextToSize(textoAnexo, pageWidth - 2);
+            pdf.text(linhas, 1, 3);
+          }
+
+          pdf.save("plano_de_aula.pdf");
+
+          alert("✅ PDF desbloqueado e baixado com sucesso!");
+          tempDiv.remove();
+        });
+      } else {
+        msg.style.color = "#dc3545";
+        msg.innerText = `❌ ${data && data.msg ? data.msg : 'Código inválido'}`;
+      }
+    })
     .catch(err => {
-    msg.style.color = "#dc3545";
-    msg.innerText = "❌ Erro ao validar código. Tente novamente.";
-    console.error(err);
-});
+      msg.style.color = "#dc3545";
+      msg.innerText = "❌ Erro ao validar código. Tente novamente.";
+      console.error(err);
+    });
 }
 </script>
 </main>
