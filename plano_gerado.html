@@ -316,9 +316,15 @@ Participar activamente das discussões sobre "${tema}".`;
 
       document.getElementById('planoFinal').style.display = 'block';
 
-// SALVAR PLANO NO SESSIONSTORAGE
-const planoHTML = document.getElementById("planoFinal").innerHTML;
-sessionStorage.setItem("planoParaPDF", planoHTML);
+// --- SALVAR PLANO NO SESSIONSTORAGE (com estilos + anexos) ---
+const estilos = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n');
+const planoCompleto = estilos + document.getElementById("planoFinal").outerHTML;
+sessionStorage.setItem("planoParaPDF", planoCompleto);
+
+// salvar anexos também
+sessionStorage.setItem("planoAnexoTipo", document.getElementById('tipoAnexo') ? document.getElementById('tipoAnexo').value : '');
+sessionStorage.setItem("planoImagemDataURL", imagemDataURL || '');
+sessionStorage.setItem("planoTextoAnexo", document.getElementById('textoAnexo') ? document.getElementById('textoAnexo').value : '');
 
 const aviso = document.getElementById('avisoExportacao');
 aviso.textContent = "⚠️ Exporte o plano de aula no modo horizontal para melhor visualização em PDF.";
@@ -424,4 +430,5 @@ function gerarPDF() {
     // Redireciona para a página de pagamento
     window.location.href = "pagamento.html";
 }
-  </script>
+              </script>
+  
