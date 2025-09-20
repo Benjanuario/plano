@@ -180,6 +180,63 @@ function validarCodigo(){
             return;
         }
 
+        function exportarPDFComAutoTable(tempDiv, anexoTipo, imagemDataURL, textoAnexo) {
+      const tabela = tempDiv.querySelector("table");
+      const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+      if (tabela) {
+        pdf.autoTable({
+          html: tabela,
+          startY: 20,
+          theme: 'grid',
+          styles: {
+            fontSize: 10,
+            cellPadding: 2,
+            overflow: 'linebreak',
+            halign: 'left',
+            valign: 'middle'
+          },
+          headStyles: { fillColor: [41,128,185], textColor: [255,255,255] },
+          margin: { top: 20, left: 10, right: 10 },
+          tableWidth: 'auto',
+          didDrawPage: function (data) {
+            pdf.setFontSize(14);
+            pdf.text("Plano de Aula", pdf.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+          },
+        });
+      }
+
+      // anexos
+      if (anexoTipo === 'imagem' && imagemDataURL) {
+        pdf.addPage();
+        const imgProps = pdf.getImageProperties(imagemDataURL);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imagemDataURL, "JPEG", 0, 10, pdfWidth, pdfHeight);
+      } else if (anexoTipo === 'texto' && textoAnexo.trim()) {
+        pdf.addPage();
+        pdf.setFontSize(14);
+        pdf.text("Anexo - Texto Adicional", 10, 20);
+        pdf.setFontSize(11);
+        const linhas = pdf.splitTextToSize(textoAnexo, pdf.internal.pageSize.getWidth() - 20);
+        pdf.text(linhas, 10, 30);
+      }
+      pdf.save("plano_de_aula.pdf");
+    }
+
+    // Substitua o trecho do desbloqueio, dentro de validarCodigo, por:
+    // ...
+    .then(data => {
+      if(data && data.valido){
+        msg.style.color = "#28a745";
+        msg.innerText = `🎉 Código válido! PDFs restantes: ${data.restante}`;
+
+        const planoHTML = sessionStorage.getItem("planoParaPDF");
+        if(!planoHTML){
+            alert("❌ Nenhum plano encontrado. Gere o plano antes de tentar desbloquear.");
+            return;
+        }
+
         // sanitiza
         const safeHTML = planoHTML.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
         const tempDiv = document.createElement("div");
@@ -191,53 +248,17 @@ function validarCodigo(){
         const imagemDataURL = sessionStorage.getItem("planoImagemDataURL") || '';
         const textoAnexo = sessionStorage.getItem("planoTextoAnexo") || '';
 
-        html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
-          const imgData = canvas.toDataURL("image/jpeg", 1.0);
-          const pdf = new jspdf.jsPDF({ orientation: "landscape", unit: "cm", format: "a4" });
+        exportarPDFComAutoTable(tempDiv, anexoTipo, imagemDataURL, textoAnexo);
 
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const ratio = Math.min(pageWidth / (canvas.width / 100), pageHeight / (canvas.height / 100));
-          const imgWidth = (canvas.width / 100) * ratio;
-          const imgHeight = (canvas.height / 100) * ratio;
-          const x = (pageWidth - imgWidth) / 2;
-          const y = (pageHeight - imgHeight) / 2;
-
-          pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
-
-          // anexos
-          if (anexoTipo === 'imagem' && imagemDataURL) {
-            pdf.addPage();
-            const imgProps = pdf.getImageProperties(imagemDataURL);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            pdf.addImage(imagemDataURL, "JPEG", 0, 0, pdfWidth, pdfHeight);
-          } else if (anexoTipo === 'texto' && textoAnexo.trim()) {
-            pdf.addPage();
-            pdf.setFontSize(14);
-            pdf.text("Anexo - Texto Adicional", 1, 2);
-            pdf.setFontSize(11);
-            const linhas = pdf.splitTextToSize(textoAnexo, pageWidth - 2);
-            pdf.text(linhas, 1, 3);
-          }
-
-          pdf.save("plano_de_aula.pdf");
-
-          alert("✅ PDF desbloqueado e baixado com sucesso!");
-          tempDiv.remove();
-        });
+        alert("✅ PDF desbloqueado e baixado com sucesso!");
+        tempDiv.remove();
       } else {
         msg.style.color = "#dc3545";
-        msg.innerText = `❌ ${data && data.msg ? data.msg : 'Código inválido'}`;
+        msg.innerText = `${data && data.msg ? data.msg : 'Código inválido'}`;
       }
     })
-    .catch(err => {
-      msg.style.color = "#dc3545";
-      msg.innerText = "❌ Erro ao validar código. Tente novamente.";
-      console.error(err);
-    });
-}
-</script>
+    // ...
+  </script>
 </main>
 </body>
 </html>
